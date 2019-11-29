@@ -52,38 +52,43 @@ def sendtoFPGA(port, data, FPGA_connection):
             if data.hex()[4:6] != '01':  # don't print 0x01 packet
                 print("Receive from PC: " + data.hex() + "\n")
         FPGA_connection.send(data[0:2] + bytes([code]) + data[2:])
-        
-sockets = []
-codesockmap = {}
-for k in portmap:
-    s = socket.socket(socket.AF_INET, type=socket.SOCK_DGRAM)
-    s.bind(("127.0.0.1", k))
-    sockets.append(s)
-    codesockmap[portmap[k]] = s
 
-FPGA_connection = socket.socket()
+def mainloop():
+    sockets = []
+    codesockmap = {}
+    for k in portmap:
+        s = socket.socket(socket.AF_INET, type=socket.SOCK_DGRAM)
+        s.bind(("127.0.0.1", k))
+        sockets.append(s)
+        codesockmap[portmap[k]] = s
+
+    FPGA_connection = socket.socket()
+    while(1):
+        try:
+            FPGA_connection.connect((FPGA_IP,  FPGA_PORT))
+            print("FPGA_connected")
+            break
+        except:
+            continue
+    sockets.append(FPGA_connection)
+
+    remaindata = b''
+    while(1):
+            read = select.select(sockets, [], [])
+            for m in read:
+                for s in m:
+                    if s.type == socket.SOCK_STREAM:
+                        newdata = FPGA_connection.recv(128)
+                        if print_FPGA_packet:
+                            print("Receive from FPGA:" + newdata.hex())
+                        remaindata = sendtoPC(remaindata + newdata, codesockmap)
+                    else :
+                        newdata = s.recv(32)
+                        sendtoFPGA(s.getsockname()[1], newdata, FPGA_connection)
+
+
 while(1):
     try:
-        FPGA_connection.connect((FPGA_IP,  FPGA_PORT))
-        print("FPGA_connected")
-        break
+        mainloop()
     except:
         continue
-sockets.append(FPGA_connection)
-
-remaindata = b''
-while(1):
-        read = select.select(sockets, [], [])
-        for m in read:
-            for s in m:
-                if s.type == socket.SOCK_STREAM:
-                    newdata = FPGA_connection.recv(128)
-                    if print_FPGA_packet:
-                        print("Receive from FPGA:" + newdata.hex())
-                    remaindata = sendtoPC(remaindata + newdata, codesockmap)
-                else :
-                    newdata = s.recv(32)
-                    sendtoFPGA(s.getsockname()[1], newdata, FPGA_connection)
-
-
-
