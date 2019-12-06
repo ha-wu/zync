@@ -1,11 +1,12 @@
 import socket
 import select
 
-
+# PC software port configurarion
 codemap = {0: ("127.0.0.1", 50002),
            1: ("127.0.0.1", 50003)
            }
 
+# Proxy port configuration
 portmap = {20002: 0,
            20003: 1
            }
@@ -16,7 +17,7 @@ Flagend = b'\x7e'
 FPGA_IP = "192.168.2.100"
 FPGA_PORT = 20482
 #Debug print
-print_FPGA_packet = 0
+print_FPGA_packet = 1
 print_PC_packet = 1
 
 
