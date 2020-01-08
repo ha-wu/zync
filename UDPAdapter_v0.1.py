@@ -30,7 +30,7 @@ def sendtoPC(data, codesockmap):
                 return b''
             else:
                 data = data[s:]
-        
+
         end = data.find(Flagend, 2)
         if end != -1:
             pack = data[:end + 1]  
